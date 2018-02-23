@@ -1,0 +1,162 @@
+public-key cryptography
+
+
+
+openssl命令
+openssl ${command} ${options} ${args}
+
+
+
+生成密钥
+openssl genpkey -out test.pem -outform PEM -algorithm rsa -pkeyopt rsa_keygen_bits:4096 # genrsa is deprecated
+通过密钥获取公钥
+openssl rsa -in test.pem -pubout > test.pem.pub
+
+
+
+准备待加密文件
+echo 'hello world' > a.txt
+
+
+
+使用公钥进行加密
+openssl pkeyutl -encrypt -pubin -inkey test.pem.pub -in a.txt -out a.sec
+使用密钥进行解密
+openssl pkeyutl -decrypt -inkey test.pem -in a.sec
+
+
+
+使用密钥进行签名
+openssl pkeyutl -sign -inkey test.pem -in a.txt -out a.sig
+使用公钥进行解密
+openssl pkeyutl -verifyrecover -pubin -inkey test.pem.pub -in a.sig
+或者直接使用公钥进行验证
+openssl pkeyutl -verify -pubin -inkey test.pem.pub -in a.txt -sigfile a.sig
+
+
+
+openssh命令
+
+
+
+key formats (in ssh-keygen, default is RFC4716)
+
+RFC4716: RFC 4716/SSH2 public or private key
+PKCS8: PEM PKCS8 public key
+PEM: PEM public key
+
+
+
+生成公钥/密钥对
+ssh-keygen -b 4096 -t rsa -f new_id_rsa
+
+
+
+将public key放置到远端:
+ssh-copy-id -i new_id_rsa andrewyi@66.228.54.227 -p 22
+
+获取指纹finger-print
+ssh-keygen -l -E {md5|sha256} -f new_id_rsa
+
+
+
+ssl / tls
+
+ssl 1.0 2.0 3.0
+tls 1.2 (2008)
+tls 1.3 (2018.1 draft)
+
+
+
+生成将用于自签名证书的密钥
+openssl genpkey -algorithm rsa -pkeyopt rsa_keygen_bits:1024 -out root_ca_key
+# openssl rsa -in root_ca_key -pubout 获取公钥
+
+
+生成自签名证书
+openssl req -new -x509 -key root_ca_key -config generate_root_ca_openssl.cnf -out root_cert.pem
+
+
+
+生成证书管理相关上下文
+echo '01' > cert_serial
+touch certs_db
+
+
+
+
+获取证书信息
+openssl x509 -in root_cert.pem -issuer
+
+
+
+生成将用于制作网站证书的密钥
+openssl genpkey -algorithm rsa -pkeyopt rsa_keygen_bits:1024 -out web_cert_key
+
+
+
+根据网站证书公钥生成将用于签名csr
+openssl req -new -key web_cert_key -config generate_csr_openssl.cnf -out web_cert.csr
+
+
+
+
+使用自签名的跟证书签名此csr
+openssl ca -config sign_csr_openssl.cnf -name cert_sign -in web_cert.csr -out web_cert
+
+
+
+
+
+
+tips:
+
+certificate authority issues digital certificates
+
+csr: certificate signing request
+
+/etc/ssl/openssl.cnf alias to /usr/lib/ssl/openssl.cnf
+
+pkcs: public key cryptography standards
+    #8: private-key information syntax standard
+    #10: certificate request standard
+
+
+
+# to delete belowing test scribbles:
+
+openssl s_server -accept 5559 -cert tech.pem -key web_cert_key
+openssl s_client -port 5559
+
+
+
+
+
+cd ca
+rm *.old
+rm certs_db.attr
+:> certs_db
+rm output_certs/*
+rm web_cert*
+
+
+
+
+
+openssl req -new -sha256 \
+    -key web_cert_key \
+    -subj "/C=US/ST=CA/O=Acme, Inc./CN=example.com" \
+    -reqexts SAN \
+    -config <(cat /etc/ssl/openssl.cnf \
+        <(printf "\n[SAN]\nsubjectAltName=DNS:example.com,DNS:www.example.com")) \
+    -out domain.csr
+
+
+
+
+
+openssl x509 -req -in web_cert.csr -CA root_ca_perm_key/root_cert.pem -CAkey root_ca_perm_key/root_ca_key -CAcreateserial -days 1 -out web_cert 
+
+openssl x509 -req -in web_cert.csr -CA ca/root_ca_perm_key/root_cert.pem -CAkey ca/root_ca_perm_key/root_ca_key -CAcreateserial -days 1 -out web_cert 
+
+openssl x509 -req -in example.org.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out example.org.crt

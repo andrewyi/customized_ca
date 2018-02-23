@@ -1,0 +1,87 @@
+[ cert_sign ]
+default_md = sha256
+serial = cert_serial
+database = certs_db
+
+new_certs_dir = output_certs
+certificate = root_ca_perm_key/root_cert.pem
+private_key = root_ca_perm_key/root_ca_key
+default_days = 1
+
+x509_extensions = web_cert_ext_section
+email_in_dn = no
+policy = sign_csr_policy_section
+
+name_opt = ca_default
+cert_opt = ca_default
+
+
+
+[ sign_csr_policy_section ]
+countryName = match
+stateOrProvinceName = match
+localityName = match
+organizationName = match
+organizationalUnitName = supplied
+commonName = supplied
+emailAddress = optional
+
+
+
+[ req ]
+default_md = sha256
+distinguished_name = generate_csr_req_distinguished_name_section
+req_extensions = web_cert_ext_section
+
+
+
+[ generate_csr_req_distinguished_name_section ]
+countryName = country name
+countryName_default = CN
+countryName_min = 2
+countryName_max = 2
+
+stateOrProvinceName = province name
+stateOrProvinceName_default = GD
+stateOrProvinceName_min = 2
+stateOrProvinceName_max = 2
+
+localityName = city name
+localityName_default = SZ
+localityName_min = 2
+localityName_max = 2
+
+organizationName = organization name
+organizationName_default = LXCX
+organizationName_min = 2
+organizationName_max = 4
+
+organizationalUnitName = organization unit name
+organizationalUnitName_default = TECH
+organizationalUnitName_min = 2
+organizationalUnitName_max = 4
+
+commonName = Common Name (eg, fully qualified host name)
+commonName_default = tech.lixinchuxing.com
+commonName_min = 3
+commonName_max = 40
+
+emailAddress = email address
+emailAddress_default = tech@lixinchuxing.com
+emailAddress_min = 5
+emailAddress_max = 40
+
+
+
+[ web_cert_ext_section ]
+basicConstraints = CA:FALSE
+keyUsage  = critical, digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement
+extendedKeyUsage = critical, serverAuth
+subjectKeyIdentifier = hash
+subjectAltName = @subject_alt_name_section
+
+
+
+[ subject_alt_name_section ]
+DNS.1 = tech.lixinchuxing.com
+DNS.2 = tech2.lixinchuxing.com

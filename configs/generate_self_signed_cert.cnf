@@ -1,0 +1,24 @@
+[ req ]
+prompt = no
+default_md = sha256
+distinguished_name = generate_self_signed_cert_req_distinguished_name_section
+x509_extensions = generate_self_signed_cert_root_ca_ext_section
+
+
+
+[ generate_self_signed_cert_req_distinguished_name_section ]
+C = CN
+ST = GD
+L = SZ
+O = LXCX
+OU = ROOT
+CN = lxcx (shenzhen) co. ltd
+emailAddress = root@lixinchuxing.com
+
+
+
+[ generate_self_signed_cert_root_ca_ext_section ]
+basicConstraints = critical, CA:TRUE
+keyUsage  = critical, keyCertSign
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always, issuer
